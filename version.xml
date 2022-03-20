@@ -1,0 +1,26 @@
+<addon name="SIEVE" version="0.15.4">
+    <depends on="beast2" atleast="2.6.0"/>
+
+    <!-- Add other dependencies as necessary. -->
+
+    <packageapp description="Integrate single-cell sequencing data into configuration file"
+                class="beast.app.datacollector.DataCollectorLauncher"
+                args="" icon=""/>
+
+    <packageapp description="Analyze trees from TumorPhylogeny" class="beast.app.treeannotator.ScsTreeAnnotatorLauncher"
+                args="" icon=""/>
+
+    <packageapp description="Modify the configuration file for variant calling"
+                class="beast.app.variantcallingmodeladaptor.VariantCallingModelAdaptorLauncher"
+                args="" icon=""/>
+    <packageapp description="Variant calling with TumorPhylogeny" class="beast.app.variantcaller.VariantCallerLauncher"
+                args="" icon=""/>
+
+    <packageapp description="Annotate genes along tree branches"
+                class="beast.app.geneannotator.GeneAnnotatorLauncher"
+                args="" icon=""/>
+
+    <packageapp description="Post processing (including ScsTreeAnnotator and VariantCaller)"
+                class="beast.app.postprocessor.PostProcessorLauncher"
+                args="" icon=""/>
+</addon>

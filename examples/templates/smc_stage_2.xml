@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beast beautistatus="" beautitemplate="Standard" namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.rawreadcountsmodel:beast.evolution.rawreadcountsmodel.seqcovmodel:beast.evolution.rawreadcountsmodel.nucreadcountsmodel:beast.evolution.likelihood" required="2.6" version="2.6">
+    <data ascertained="felsenstein" meanAscBiasCorrection = "mean" bgInfoSanityCheck="true" bgSitesNum="-1" dataType="full supports-coverage" id="alignment" spec="beast.evolution.alignment.ScsAlignment">
+    </data>
+                    
+    <map name="Uniform">beast.math.distributions.Uniform</map>
+    <map name="Exponential">beast.math.distributions.Exponential</map>
+    <map name="LogNormal">beast.math.distributions.LogNormalDistributionModel</map>
+    <map name="Normal">beast.math.distributions.Normal</map>
+    <map name="Beta">beast.math.distributions.Beta</map>
+    <map name="Gamma">beast.math.distributions.Gamma</map>
+    <map name="LaplaceDistribution">beast.math.distributions.LaplaceDistribution</map>
+    <map name="prior">beast.math.distributions.Prior</map>
+    <map name="InverseGamma">beast.math.distributions.InverseGamma</map>
+    <map name="OneOnX">beast.math.distributions.OneOnX</map>
+                    
+    <run chainLength="1500000" id="mcmc" spec="MCMC" storeEvery="500">
+        <!-- estimated parameters -->
+        <state id="state" spec="ScsState" storeEvery="1000">
+            <!-- tree -->
+            <tree id="tree" name="stateNode" nodetype="beast.evolution.tree.ScsNode" spec="beast.evolution.tree.ScsTree" treeFileName="">
+                <taxonset id="taxonSet" scsAlignment="@alignment" spec="ScsTaxonSet"/>
+            </tree>
+            
+            <!-- coalescent tree parameters -->
+            <parameter id="ePopSize" name="stateNode" spec="parameter.RealParameter">0.3</parameter>
+            <parameter id="growthRate" name="stateNode" spec="parameter.RealParameter">1.0E-5</parameter>
+        </state>
+                                        
+        <!-- posterior -->
+        <distribution id="posterior" spec="util.CompoundDistribution">
+            <!-- prior -->
+            <distribution id="prior" spec="util.CompoundDistribution">
+                <!-- tree prior -->
+                <distribution id="coalescentExponential" spec="ScsCoalescent">
+                    <populationModel growthRate="@growthRate" id="exponentialGrowth" popSize="@ePopSize" spec="ExponentialGrowth"/>
+                    <treeIntervals id="treeIntervals" spec="TreeIntervals" tree="@tree"/>
+                </distribution>
+                
+                <prior id="ePopSizePrior" name="distribution" x="@ePopSize">
+                    <OneOnX id="ePopSizeDist" name="distr"/>
+                </prior>
+                
+                <prior id="growthRatePrior" name="distribution" x="@growthRate">
+                    <LaplaceDistribution id="growthRateDist" name="distr">
+                        <parameter estimate="false" id="growthRateDistRealParameter.1" name="mu" spec="parameter.RealParameter">0.001</parameter>
+                        <parameter estimate="false" id="growthRateDistRealParameter.2" name="scale" spec="parameter.RealParameter">30.701135</parameter>
+                    </LaplaceDistribution>
+                </prior>
+            </distribution>
+                                                            
+            <!-- tree likelihood -->
+            <distribution id="likelihood1" spec="util.CompoundDistribution" threads="40" useThreads="true">
+                <distribution id="treeLikelihood" runTimeAnalysis="false" scsData="@alignment" spec="ThreadedScsTreeLikelihood" tree="@tree" traceMLGenotypes="false">
+                    <siteModel gammaCategoryCount="4" id="siteModel" spec="ScsSiteModel">
+                        <parameter estimate="false" id="gammaShape" lower="0.0" name="shape" spec="parameter.RealParameter">1.0</parameter>
+                        <parameter estimate="false" id="mutationRate" name="mutationRate" spec="parameter.RealParameter">1.0</parameter>
+                        
+                        <substModel id="scsFME" spec="ScsFiniteMuExtendedModel"/>
+                    </siteModel>
+                                                                                                    
+                    <branchRateModel id="strictClock" spec="beast.evolution.branchratemodel.StrictClockModel">
+                        <parameter estimate="false" id="clockRate" name="clock.rate" spec="parameter.RealParameter">1.0</parameter>
+                    </branchRateModel>
+                                                                                                    
+		            <rawReadCountsModel id="rawReadCountsModel" spec="RawReadCountsModelFiniteMuDM">
+                        <parameter estimate="false" id="adoRate" lower="0.0" name="adoRate" spec="parameter.RealParameter" upper="1.0">0.3</parameter>
+                        <seqCovModel id="seqCovModel" inVariantCallingMode="false" spec="ExploredSharedAllelicSeqCovModel" zeroCovMode="0">
+                            <parameter estimate="false" id="allelicSeqCov" lower="0.0" name="allelicSeqCov" spec="parameter.RealParameter" upper="1000.0">50</parameter>
+                            <parameter estimate="false" id="allelicSeqCovRawVar" lower="0.0" name="allelicSeqCovRawVar" spec="parameter.RealParameter" upper="1000.0">50</parameter>
+                        </seqCovModel>
+                                                    
+                        <nucReadCountsModel id="nucReadCountsModel" spec="NucReadCountsModelFiniteMuDM">
+                            <parameter estimate="false" id="effSeqErrRate" lower="0.0" name="effSeqErrRate" spec="parameter.RealParameter" upper="1.0">8.0E-3</parameter>
+                            <parameter estimate="false" id="shapeCtrl1" lower="0.0" name="shapeCtrl1" spec="parameter.RealParameter" upper="1.0E4">150.0</parameter>
+                            <parameter estimate="false" id="shapeCtrl2" lower="0.0" name="shapeCtrl2" spec="parameter.RealParameter" upper="100">2.0</parameter>
+                        </nucReadCountsModel>
+                    </rawReadCountsModel>
+                </distribution>
+            </distribution>
+        </distribution>
+                                        
+        <!-- MCMC operators -->
+        <!-- tree operators -->
+        <operator id="CoalescentExponentialTreeScaler" optimise="true" scaleFactor="0.5" spec="ScsTreeScaleOperator" tree="@tree" weight="10.0"/>
+        <operator id="CoalescentExponentialTreeRootScaler" optimise="true" rootOnly="true" scaleFactor="0.5" spec="ScsTreeScaleOperator" tree="@tree" weight="10.0"/>
+        <operator id="CoalescentExponentialUniformOperator" spec="ScsUniform" tree="@tree" weight="30.0"/>
+        <operator id="CoalescentExponentialSubtreeSlide" optimise="true" spec="ScsSubtreeSlide" tree="@tree" weight="8.0"/>
+        <operator id="CoalescentExponentialNarrow" spec="ScsExchange" tree="@tree" weight="8.0"/>
+        <operator id="CoalescentExponentialWide" isNarrow="false" spec="ScsExchange" tree="@tree" weight="8.0"/>
+        <operator id="CoalescentExponentialWilsonBalding" spec="ScsWilsonBalding" tree="@tree" weight="8.0"/>
+                                
+        <!-- coalescent process parameters operators -->
+        <operator id="ePopSizeScaler" optimise="true" parameter="@ePopSize" scaleFactor="0.75" spec="ScaleOperator" weight="4.0"/>
+        <operator id="GrowthRateRandomWalk" parameter="@growthRate" spec="RealRandomWalkOperator" weight="3.0" windowSize="1.0"/>
+                                        
+        <!-- logger -->
+        <logger fileName="fels_fixed.log" id="traceLog" logEvery="500" model="@posterior" sanitiseHeaders="true" sort="smart" spec="Logger">
+            <log idref="posterior"/>
+            <log idref="likelihood1"/>
+            <log idref="prior"/>
+            <log idref="treeLikelihood"/>
+            <log id="treeHeight" logLength="false" spec="beast.evolution.tree.TreeStatLogger" tree="@tree"/>
+            <log idref="coalescentExponential"/>
+            <log idref="ePopSize"/>
+            <log idref="growthRate"/>
+        </logger>
+                                        
+        <logger id="screenLog" logEvery="500" spec="Logger">
+            <log idref="posterior"/>
+            <log idref="likelihood1"/>
+            <log idref="prior"/>
+        </logger>
+                                        
+        <logger fileName="fels_fixed.trees" id="treeLog" logEvery="500" mode="tree" spec="Logger">
+            <log id="TreeWithMetaDataLogger" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@tree"/>
+        </logger>
+        
+        <operatorschedule id="OperatorSchedule" spec="OperatorSchedule"/>
+    </run>
+</beast>

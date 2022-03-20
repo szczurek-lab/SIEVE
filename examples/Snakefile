@@ -1,0 +1,333 @@
+"""
+INSTRUCTION:
+Edit the CONFIGURATION section as you wish.
+Keep other sections untouched unless you wish to fine tune the options of some rules.
+"""
+
+import os
+
+############################################
+#              CONFIGURATION               #
+############################################
+
+# Directory for the results of the analysis. Can be absolute or relative.
+# Set to '' to save the results in the current directory.
+BASEDIR = ''
+
+# Path to the data file.
+DATA = 'data/readCounts.tsv'
+
+# Path to the file containing cell names.
+CELLNAMES = 'data/snv_cell_names'
+
+# Path to the file containing cell names to be excluded.
+EXCLUDEDCELLNAMES = ''
+
+# Seed for the MCMC.
+SEED = 142355436435
+
+# Whether to use data from sex chromosomes. [True, False]
+# We recommend setting it 'True' when the samples are coming from females,
+# and setting it 'False' when coming from males.
+USESEX = False
+
+# The threshold of missing data percentage for the data to be analysed. [0.001-1]
+# [0.001, 1): the programme will choose as many sites as possible without exceeding the specified threshold.
+# 1: the selection is turned off; i.e., all data will be used for the analysis.
+MISSINGDATATHRESHOLD = 1
+
+# The number of threads for the 1st stage.
+STAGE1THREADS = 1
+
+# The number of threads for the 2nd stage.
+STAGE2THREADS = 1
+
+# The percentage of the burn-in phase. [0-100]
+BURNIN = 10
+
+# The method to acquire parameter estimates from MCMC samples for variant calling. ['mean', 'median', 'mode', 'all']
+# 'mean': use mean of each parameter.
+# 'median': use median of each parameter.
+# 'mode': use mode with a Gaussian kernel of each parameter.
+# 'all': try each type above, and choose the one with the maximum likelihood automatically.
+EATIMATESTYPE = 'all'
+
+# Path to the 'applauncher' executable of BEAST 2.
+APPLAUNCHER = '/path/to/applauncher'
+
+# Path to the 'beast' executable of BEAST 2.
+BEAST = '/path/to/beast'
+
+# Directory containing the configuration templates. Can be absolute or relative.
+TEMPLATESDIR = 'templates/'
+
+# Names of the templates for the 1st stage (without the suffix).
+# Can be a string or a list of strings.
+STAGE1TEMPLATES = ['rmc_stage_1']
+
+# Names of the templates for the 2nd stage (without the suffix).
+# Can be a string or a list of strings.
+STAGE2TEMPLATES = ['rmc_stage_2']
+
+# Suffix of the templates.
+TEMPLATESUF = '.xml'
+
+# Directory for the results of the 1st stage.
+# Will be under 'BASEDIR'.
+STAGE1DIR = 'stage1/'
+
+# Directory for the results of the 2nd stage.
+# Will be under 'BASEDIR'.
+STAGE2DIR = 'stage2/'
+
+# Directory for the results of phylogenetic inference.
+# Will be under 'STAGE1DIR' or 'STAGE2DIR'.
+PHYINFDIR = 'phylogenetic_inference_dir/'
+
+# Directory for the results of variant calling.
+# Will be under 'STAGE1DIR' or 'STAGE2DIR'.
+VARCALLDIR = 'variant_calling_dir/'
+
+
+###########################################
+#                CONSTANTS                #
+###########################################
+
+STAGE1PHYINFPATH = BASEDIR + STAGE1DIR + PHYINFDIR
+STAGE1VARCALLPATH = BASEDIR + STAGE1DIR + VARCALLDIR
+STAGE2PHYINFPATH = BASEDIR + STAGE2DIR + PHYINFDIR
+STAGE2VARCALLPATH = BASEDIR + STAGE2DIR + VARCALLDIR
+
+
+###########################################
+#                FUNCTIONS                #
+###########################################
+
+def getCondition(cond: bool, str_t: str, str_f: str) -> str:
+    return str_t if cond else str_f
+
+
+############################################
+#                  RULES                   #
+############################################
+
+rule all:
+    input:
+        expand(STAGE2VARCALLPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.estimates", stage1Templates=STAGE1TEMPLATES, stage2Templates=STAGE2TEMPLATES),
+        expand(STAGE2VARCALLPATH + "{stage1Templates}-{stage2Templates}/files", stage1Templates=STAGE1TEMPLATES, stage2Templates=STAGE2TEMPLATES)
+
+
+############################################
+#                 STAGE 1                  #
+############################################
+
+# Rule: integrate reads data into templates
+rule integrateDataStage1:
+    input: 
+        data=DATA,
+        cellNames = CELLNAMES
+    output: 
+        protected(STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}" + TEMPLATESUF)
+    params:
+        dataCollector=APPLAUNCHER + " DataCollectorLauncher",
+        useSex=lambda wildcards: getCondition(USESEX, '', '-ignoreSex'),
+        excludedCellNames=lambda wildcards: getCondition(EXCLUDEDCELLNAMES != '' and os.path.isfile(EXCLUDEDCELLNAMES), '-exclude ' + EXCLUDEDCELLNAMES, ''),
+        template=TEMPLATESDIR + "{stage1Templates}" + TEMPLATESUF,
+        missingDataThreshold=MISSINGDATATHRESHOLD
+    shell: 
+        "{params.dataCollector} "
+        "-cell {input.cellNames} "
+        "{params.excludedCellNames} "
+        "-sciphi "
+        "-data {input.data} "
+        "{params.useSex} "
+        "-template {params.template} "
+        "-miss {params.missingDataThreshold} "
+        "-out {output}"
+
+
+# Rule: perfrom phylogenetic inference
+rule runPhyloInfStage1:
+    input: 
+        STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}" + TEMPLATESUF
+    output: 
+        trees=protected(STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}.trees"),
+        mcmclog=protected(STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}.log"),
+        state=protected(STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}" + TEMPLATESUF + ".state")
+    threads:
+        STAGE1THREADS
+    params:
+        prefix=STAGE1PHYINFPATH + "{stage1Templates}/",
+        log=STAGE1PHYINFPATH + "{stage1Templates}/mcmc.out"
+    shell:
+        "{BEAST} "
+        "-overwrite "
+        "-seed {SEED} "
+        "-threads {threads} "
+        "-prefix {params.prefix} "
+        "{input} " 
+        "&>{params.log}"
+
+
+# Rule: perfrom tree annotation
+rule runTreeAnnotationStage1:
+    input: 
+        STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}.trees"
+    output: 
+        tree=protected(STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}.tree"),
+        simpleTree=protected(STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}_simple.tree")
+    params:
+        treeAnnotator=APPLAUNCHER + " ScsTreeAnnotatorLauncher",
+        log=STAGE1PHYINFPATH + "{stage1Templates}/process_tree.out"
+    shell: 
+        "{params.treeAnnotator} "
+        "-burnin {BURNIN} "
+        "-simpleTree "
+        "{input} "
+        "{output.tree} "
+        "&>{params.log}"
+
+
+# Rule: perfrom variant calling
+rule runVarCallStage1:
+    input: 
+        mcmclog=STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}.log",
+        config=STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}" + TEMPLATESUF,
+        tree=STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}.tree"
+    output: 
+        estimates=protected(STAGE1VARCALLPATH + "{stage1Templates}/{stage1Templates}.estimates"),
+        files=protected(STAGE1VARCALLPATH + "{stage1Templates}/files")
+    params:
+        variantCaller=APPLAUNCHER + " VariantCallerLauncher",
+        prefix=STAGE1VARCALLPATH + "{stage1Templates}/"
+    shell: 
+        "{params.variantCaller} "
+        "-details "
+        "-burnin {BURNIN} "
+        "-threads 1 "
+        "-estimates {EATIMATESTYPE} "
+        "-mcmclog {input.mcmclog} "
+        "-config {input.config} "
+        "-tree {input.tree} "
+        "-prefix {params.prefix} "
+        "&>{params.prefix}out; "
+        "ls {params.prefix} > {output.files}"
+
+
+############################################
+#                 STAGE 2                  #
+############################################
+
+# Rule: update templates for stage 2 from results of stage 1
+rule updateStage2Config:
+    input:
+        estimates=STAGE1VARCALLPATH + "{stage1Templates}/{stage1Templates}.estimates",
+        files=STAGE1VARCALLPATH + "{stage1Templates}/files",
+        simpleTree=STAGE1PHYINFPATH + "{stage1Templates}/{stage1Templates}_simple.tree"
+    output:
+        protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/stage2_template" + TEMPLATESUF)
+    params:
+        template1=TEMPLATESDIR + "{stage1Templates}" + TEMPLATESUF,
+        template2=TEMPLATESDIR + "{stage2Templates}" + TEMPLATESUF
+    shell:
+        "python3 scripts/set_up_stage2_from_stage1.py "
+        "--tree {input.simpleTree} "
+        "--estimates {input.estimates} "
+        "--results {input.files} "
+        "--template1 {params.template1} "
+        "--template2 {params.template2} "
+        "--out {output}"
+
+
+# Rule: integrate reads data into templates
+rule integrateDataStage2:
+    input: 
+        data=DATA,
+        cellNames = CELLNAMES,
+        template=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/stage2_template" + TEMPLATESUF
+    output: 
+        protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}" + TEMPLATESUF)
+    params:
+        dataCollector=APPLAUNCHER + " DataCollectorLauncher",
+        useSex=lambda wildcards: getCondition(USESEX, '', '-ignoreSex'),
+        excludedCellNames=lambda wildcards: getCondition(EXCLUDEDCELLNAMES != '' and os.path.isfile(EXCLUDEDCELLNAMES), '-exclude ' + EXCLUDEDCELLNAMES, ''),
+        missingDataThreshold=MISSINGDATATHRESHOLD
+    shell: 
+        "{params.dataCollector} "
+        "-cell {input.cellNames} "
+        "{params.excludedCellNames} "
+        "-sciphi "
+        "-data {input.data} "
+        "{params.useSex} "
+        "-template {input.template} "
+        "-miss {params.missingDataThreshold} "
+        "-out {output}"
+
+
+# Rule: perfrom phylogenetic inference
+rule runPhyloInfStage2:
+    input: 
+        STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}" + TEMPLATESUF
+    output: 
+        trees=protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.trees"),
+        mcmclog=protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.log"),
+        state=protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}" + TEMPLATESUF + ".state")
+    threads:
+        STAGE2THREADS
+    params:
+        prefix=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/",
+        log=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/" + "mcmc.out"
+    shell:
+        "{BEAST} "
+        "-overwrite "
+        "-seed {SEED} "
+        "-threads {threads} "
+        "-prefix {params.prefix} "
+        "{input} " 
+        "&>{params.log}"
+
+
+# Rule: perfrom tree annotation
+rule runTreeAnnotationStage2:
+    input: 
+        STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.trees"
+    output: 
+        tree=protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.tree"),
+        simpleTree=protected(STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}_simple.tree")
+    params:
+        treeAnnotator=APPLAUNCHER + " ScsTreeAnnotatorLauncher",
+        log=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/process_tree.out"
+    shell: 
+        "{params.treeAnnotator} "
+        "-burnin {BURNIN} "
+        "-simpleTree "
+        "{input} "
+        "{output.tree} "
+        "&>{params.log}"
+
+
+# Rule: perfrom variant calling
+rule runVarCallStage2:
+    input: 
+        mcmclog=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.log",
+        config=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}" + TEMPLATESUF,
+        tree=STAGE2PHYINFPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.tree"
+    output: 
+        estimates=protected(STAGE2VARCALLPATH + "{stage1Templates}-{stage2Templates}/{stage1Templates}-{stage2Templates}.estimates"),
+        files=protected(STAGE2VARCALLPATH + "{stage1Templates}-{stage2Templates}/files")
+    params:
+        variantCaller=APPLAUNCHER + " VariantCallerLauncher",
+        prefix=STAGE2VARCALLPATH + "{stage1Templates}-{stage2Templates}/"
+    shell: 
+        "{params.variantCaller} "
+        "-details "
+        "-burnin {BURNIN} "
+        "-threads 1 "
+        "-estimates median "
+        "-mcmclog {input.mcmclog} "
+        "-config {input.config} "
+        "-tree {input.tree} "
+        "-prefix {params.prefix} "
+        "&>{params.prefix}out; "
+        "ls {params.prefix} > {output.files}"
+

@@ -1,0 +1,10 @@
+**/.idea
+**/.snakemake
+**/build
+**/build-lib
+**/depends
+**/out
+
+**/*.iml
+.DS_Store
+.gitignore
