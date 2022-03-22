@@ -1,6 +1,10 @@
 # SIEVE - SIngle-cell EVolution Explorer
 
-SIEVE is a statistical method that exploits raw read counts for all nucleotides from scDNA-seq to reconstruct the cell phylogeny and call variants based on the inferred phylogenetic relations among cells. SIEVE is built upon finite-sites assumption, and is able to infer accurate branch lengths by correcting acquisition bias. When data is of adequate quality, SIEVE can also reliably call allelic dropout states. The software is implemented and available as a package of [Beast 2](https://www.beast2.org/).
+SIEVE is a statistical method that exploits raw read counts for all nucleotides from scDNA-seq to reconstruct the cell phylogeny and call variants based on the inferred phylogenetic relations among cells. SIEVE is built upon finite-sites assumption, and is able to infer accurate branch lengths by correcting acquisition bias. When data is of adequate quality, SIEVE can also reliably call allelic dropout states. The software is implemented and available as a package of [BEAST 2](https://www.beast2.org/).
+
+For more details, check out the paper on bioRxiv:
+
+
 
 ## Installation
 
@@ -50,8 +54,9 @@ $ snakemake --cores {NUM} -kp
 The two-stage strategy mentioned above can also be executed step-by-step as follows.
 
 1. DataCollector
+   
    DataCollector is used to integrate the selected data from DataFilter with the configured template for the first stage. It can be called using BEAST 2's `appluancher`:
-
+   
    ```bash
    $ /path/to/applauncher DataCollectorLauncher --help
    Usage: datacollector [-help] [-prefix <output_file_prefix>] [-cell <cell_names_file>] [-sciphi] [-data <data_file>] [-datatype <i>] [-ignoreSex] [-template <template_configuration_file>] [-exclude <excluded_cell_names>] [-out <output_file>] [-sample <i1> <i2>] [-bgcs <i1> <i2> <i3>] [-bgfsc <i1> <i2> <i3> <i4> <i5>] 
@@ -70,19 +75,21 @@ The two-stage strategy mentioned above can also be executed step-by-step as foll
        -bgfsc specifies the order of background information for "Full support-Coverage" datatype w.r.t. (0 - variant1, 1 - variant2, 2 - variant3, 3 - normal, 4 - coverage); default: 0 1 2 3 4; working with "-datatype 1" if specified -> OPTIONAL
    IMPORTANT: please make sure that in the input xml template the section containing alignment has a tag named 'data', and the log sections have a tag named 'logger'.
    ```
-
+   
    Note that options marked by "MANDATORY" are required for running the command, while those by "OPTIONAL" are not.
-
+   
 2. BEAST 2
+   
    With the output of step 1, now it is the time to run the phylogenetic analysis with the following command:
-
+   
    ```bash
    $ /path/to/beast -overwrite -threads {NUM} -prefix {PREFIX} {CONFIGURED FILE}
    ```
-
+   
 3. TreeAnnotator
+   
    TreeAnnotator is used to summarise a maximum clade credibility tree (MCC) from the sampled trees in step 2.
-
+   
    ```bash
    $ /path/to/applauncher SCSTreeAnnotatorLauncher --help
    Usage: scstreeannotator [-prefix <output_file_prefix>] [-heights <keep|median|mean|ca>] [-burnin <i>] [-b <i>] [-limit <r>] [-target <target_file_name>] [-help] [-forceDiscrete] [-lowMem] [-hpd2D <r>] [-nohpd2D] [-noSA] [-simpleTree] [-noTrunk] <input-file-name> [<output-file-name>]
@@ -101,10 +108,11 @@ The two-stage strategy mentioned above can also be executed step-by-step as foll
        -simpleTree simple output tree only containing tree heights (the output file will be labeled with 'simple'), default disabled -> OPTIONAL
        -noTrunk trees processed do not have a trunk connecting the root of samples and the root of entire tree, default disabled -> OPTIONAL
    ```
-
+   
 4. VariantCaller
+   
    VariantCaller is used to call variants given the outputs of step 1-3.
-
+   
    ```bash
    $ /path/to/applauncher VariantCallerLauncher -help
    Usage: variantcaller [-help] [-threads <i>] [-prefix <output_file_prefix>] [-runconfig <run_config_file>] [-burnin <i>] [-b <i>] [-cached <cached_estimates_file>] [-estimates <mean|median|mode|all>] [-kdedist <gaussian|epanechnikov|rectangular|triangular|biweight|cosine|optcosine>] [-mcmclog <mcmc_log_file>] [-config <config_file>] [-tree <tree_file>] [-details] [-cells <i>] [-medianrate] [-userate] 
@@ -125,10 +133,11 @@ The two-stage strategy mentioned above can also be executed step-by-step as foll
        -medianrate use median rate rather than mean rate from the input tree -> OPTIONAL
        -userate use both branch length and rate from the input tree in variant calling -> OPTIONAL
    ```
-
-5. Update the configuration file for the second stage.
+   
+5. Update the configuration file for the second stage. 
+   
    Step 1-4 are for the first stage. Given the outputs of the above steps and a template for the second stage, we can update such a template with a python script provided by us (`examples/scripts/set_up_stage2_from_stage1.py`):
-
+   
    ```bash
    $ python3 set_up_stage2_from_stage1.py -h
    usage: set_up_stage2_from_stage1.py [-h] [--tree TREE] --estimates ESTIMATES --results RESULTS --template1 TEMPLATE1 --template2 TEMPLATE2 --out OUT
@@ -147,8 +156,43 @@ The two-stage strategy mentioned above can also be executed step-by-step as foll
                            template configuration file for stage 2
      --out OUT             modified template configuration file for stage 2
    ```
+   
+6. With the updated template for the second stage, it is ready to run by repeating step 1-4. 
 
-6. With the updated template for the second stage, it is ready to run by repeating step 1-4.
+   Note that in order to map mutations (see [the following section](#mutation-mapping)) later, option `-details` in VariantCaller (step 4) must be explicitly specified.
+
+## Mutation mapping
+
+After getting variant calling results, SIEVE is able to map the mutations to branches. But first, we need to build mutation maps using tools like [Annovar](https://annovar.openbioinformatics.org/en/latest/), with the output of which SIEVE is compatible. For example, in the SIEVE paper we called Annovar with the following [command](https://davetang.org/wiki2/index.php?title=ANNOVAR):
+
+```bash
+$ perl path/to/table_annovar.pl path/to/vcf/file path/to/database/directory -buildver hg19 -out {PREFIX} -remove -protocol refgene,ensGene,dbnsfp30a,ljb26_all -operation gx,gx,f,f -nastring . -vcfinput -polish -xref path/to/gene_fullxref.txt
+```
+
+and we used four databases *refGene*, *ensGene*, *dbnsfp30a*, and *ljb26_all* of the *hg19* reference genome. The list of available databases of Annovar can be found [here](http://annovar.openbioinformatics.org/en/latest/user-guide/download/).
+
+Besides, SIEVE is able to process another format of mutation maps where each line contains a chromosome label, a starting position number, an ending position number and a gene name, separated by any white spaces except new line.
+
+Moreover, a list of disease-related genes from sources like [COSMIC](https://cancer.sanger.ac.uk/cosmic) can also be used to filter out unrelated/uninterested mutations. 
+
+GeneAnnotator in SIEVE is developed for mutation mapping:
+
+```bash
+$ /path/to/applauncher GeneAnnotatorLauncher -help
+Usage: geneannotator [-help] [-tree <input_tree_file>] [-snv <snv_file>] [-subst <i>] [-map <mutation_map_file>] [-anv <i>] [-filter <filtering_genes_file>] [-sep <i>] [-col <i>] [-out <out_tree_file>] 
+    -help option to print this message -> OPTIONAL
+    -tree specifies a tree file annotated with genotypes. This is usually generated by VariantCaller and ended with '.intermediate_tree'. -> MANDATORY
+    -snv specifies a file containing variant sites information. This is usually generated by VariantCaller and ended with '.loci_info'. -> MANDATORY
+    -subst specifies the substitution model used to infer phylogeny and call variants (0: ScsFiniteMuExtendedModel). -> MANDATORY
+    -map specifies the mutation map. -> MANDATORY
+    -anv specifies when the value of --map option is an output of Annovar (0: tab-separated, 1: comma-separated). -> OPTIONAL
+    -filter specifies filtering genes file (headers required). -> OPTIONAL
+    -sep specifies the separator of filtering genes file (0: tab-separated; 1: comma-separated; default: 0). -> OPTIONAL
+    -col specifies the column index of gene names in the filtering genes file (starting from 0; default: 0). -> OPTIONAL
+    -out specifies the output tree file with genes annotated. -> OPTIONAL
+```
+
+
 
 ## Troubleshooting
 
