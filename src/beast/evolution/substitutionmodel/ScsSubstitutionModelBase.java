@@ -34,11 +34,11 @@ public abstract class ScsSubstitutionModelBase extends GeneralSubstitutionModel 
         // single mutation (0/0 -> 0/1)
         SINGLE_MUTATION("SM"),
 
-        // homozygous simultaneous double mutation (0/0 -> 1/1)
-        HOMO_SIMU_DOUBLE_MUTATION("HoSDM"),
+        // homozygous coincident double mutation (0/0 -> 1/1)
+        HOMO_COIN_DOUBLE_MUTATION("HoCDM"),
 
-        // heterozygous simultaneous double mutation (0/0 -> 1/1')
-        HETERO_SIMU_DOUBLE_MUTATION("HeSDM"),
+        // heterozygous coincident double mutation (0/0 -> 1/1')
+        HETERO_COIN_DOUBLE_MUTATION("HeCDM"),
 
         // single back mutation (0/1 -> 0/0)
         SINGLE_BACK_MUTATION("SB"),

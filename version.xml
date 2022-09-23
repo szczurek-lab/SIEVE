@@ -1,5 +1,5 @@
-<addon name="SIEVE" version="0.15.4">
-    <depends on="beast2" atleast="2.6.0"/>
+<addon name="SIEVE" version="0.15.5">
+    <depends on="beast2" atleast="2.6.0" atmost="2.6.7"/>
 
     <!-- Add other dependencies as necessary. -->
 

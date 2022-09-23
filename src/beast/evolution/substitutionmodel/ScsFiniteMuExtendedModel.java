@@ -156,9 +156,9 @@ public class ScsFiniteMuExtendedModel extends ScsSubstitutionModelBase {
                     case 1:
                         return new EvolutionaryEventType[]{EvolutionaryEventType.SINGLE_MUTATION};
                     case 2:
-                        return new EvolutionaryEventType[]{EvolutionaryEventType.HOMO_SIMU_DOUBLE_MUTATION};
+                        return new EvolutionaryEventType[]{EvolutionaryEventType.HOMO_COIN_DOUBLE_MUTATION};
                     case 3:
-                        return new EvolutionaryEventType[]{EvolutionaryEventType.HETERO_SIMU_DOUBLE_MUTATION};
+                        return new EvolutionaryEventType[]{EvolutionaryEventType.HETERO_COIN_DOUBLE_MUTATION};
                     default:
                         throw new IllegalArgumentException("Error! Unsupported genotype for the child: " + childGenotype);
                 }
