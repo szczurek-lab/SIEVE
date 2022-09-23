@@ -4,11 +4,11 @@ SIEVE is a statistical method that exploits raw read counts for all nucleotides 
 
 For more details, check out the paper on bioRxiv:
 
-
+[SIEVE: joint inference of single-nucleotide variants and cell phylogeny from single-cell DNA sequencing data](https://doi.org/10.1101/2022.03.24.485657)
 
 ## Installation
 
-To install sieve, please follow the [install by hand steps](https://www.beast2.org/managing-packages/). 
+To install SIEVE, please follow the [install by hand steps](https://www.beast2.org/managing-packages/). 
 
 ### Use built package (Recommended)
 
@@ -17,6 +17,10 @@ The required and up-to-date compressed file of SIEVE for installation can be fou
 ### Build SIEVE from source (Alternative)
 
 It is also possible to build SIEVE from the source with `ant` according to `build.xml`. Simply run `ant build` under the root directory of the cloned project. Once the build is done, you can find the compressed file under `dist/`.
+
+### Compatibility with BEAST 2
+
+Currently, SIEVE is compatible with BEAST 2.6. Later SIEVE will be adapted for BEAST 2.7.
 
 ## Input to SIEVE
 
