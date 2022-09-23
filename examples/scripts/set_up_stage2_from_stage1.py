@@ -1,11 +1,11 @@
 import argparse
 import os
 import xml.etree.ElementTree as ET
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 
 # parent -> children
-def get_parent2children_tag() -> Dict[str, List[str]]:
+def get_parent2children_tag() -> dict[str, list[str]]:
     return {
         'rawReadCountsModel': ['adoRate'],
         'seqCovModel': ['allelicSeqCov', 'allelicSeqCovRawVar'],
@@ -15,25 +15,25 @@ def get_parent2children_tag() -> Dict[str, List[str]]:
 
 
 # parameter -> (lower, upper)
-def get_param_bounds() -> Dict[str, Tuple[Union[float, None], Union[float, None]]]:
+def get_param_bounds() -> dict[str, tuple[Union[float, None], Union[float, None]]]:
     return {
         'shape': (6.0, None)
     }
 
 
 # tag -> attribute
-def get_tree_index() -> Dict[str, str]:
+def get_tree_index() -> dict[str, str]:
     return {
         'tree': 'treeFileName'
     }
 
 
 def get_name2id(
-        parent2children_tag: Dict[str, List[str]],
-        param_bounds: Dict[str, Tuple[Union[float, None], Union[float, None]]],
+        parent2children_tag: dict[str, list[str]],
+        param_bounds: dict[str, tuple[Union[float, None], Union[float, None]]],
         root: ET.Element
-) -> Dict[str, Tuple[str, Union[float, None], Union[float, None]]]:
-    name2id: Dict[str, Tuple[str, Union[float, None], Union[float, None]]] = {}
+) -> dict[str, tuple[str, Union[float, None], Union[float, None]]]:
+    name2id: dict[str, tuple[str, Union[float, None], Union[float, None]]] = {}
     for parent, children in parent2children_tag.items():
         for parent_tag in root.iter(parent):
             for attr_name, attr_val in parent_tag.attrib.items():
@@ -71,11 +71,11 @@ def get_estimate_type(results: str, key: str) -> str:
 
 def get_estimates(
         estimates: str,
-        name2id: Dict[str, Tuple[str, Union[float, None], Union[float, None]]],
+        name2id: dict[str, tuple[str, Union[float, None], Union[float, None]]],
         estimate_type: str
-) -> Dict[str, float]:
+) -> dict[str, float]:
     if os.path.isfile(estimates):
-        id2estimates: Dict[str, float] = {}
+        id2estimates: dict[str, float] = {}
         reach_beginning: bool = False
         reach_ending: bool = False
         with open(estimates, 'r') as fh:
@@ -85,7 +85,7 @@ def get_estimates(
 
                 if reach_beginning is True:
                     if not line.strip().startswith('#'):
-                        comp: List[str] = line.strip().split('\t')
+                        comp: list[str] = line.strip().split('\t')
                         if comp[1].strip() in estimate_type:
                             for _name, _collect in name2id.items():
                                 _id, _lower, _upper = _collect
@@ -107,10 +107,10 @@ def get_estimates(
 
 def update_template2(
         tree2: ET.ElementTree,
-        parent2children_tag: Dict[str, List[str]],
-        name2id: Dict[str, Tuple[str, Union[float, None], Union[float, None]]],
-        id2estimates: Dict[str, float],
-        tree_index: Dict[str, str],
+        parent2children_tag: dict[str, list[str]],
+        name2id: dict[str, tuple[str, Union[float, None], Union[float, None]]],
+        id2estimates: dict[str, float],
+        tree_index: dict[str, str],
         tree_file_name: Union[str, None]
 ) -> None:
     for parent, children in parent2children_tag.items():
