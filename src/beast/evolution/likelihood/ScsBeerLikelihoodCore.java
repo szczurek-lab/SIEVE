@@ -171,8 +171,14 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
      * @param constPartials the arrays of partials of constant site
      * @param constRoot     root likelihood for constant site (passed by reference)
      */
-    protected void calculateIntegratePartials(double[] inPartials, double[] proportions, int rootGenotype,
-                                              double[] outPartials, double[] constPartials, double[] constRoot) {
+    protected void calculateIntegratePartials(
+            double[] inPartials,
+            double[] proportions,
+            int rootGenotype,
+            double[] outPartials,
+            double[] constPartials,
+            double[] constRoot
+    ) {
         if (useLogPartials) {
             for (int patternIndex = 0; patternIndex < nrOfPatterns; patternIndex++) {
                 int inIndex = patternIndex * nrOfStates + rootGenotype;
@@ -601,10 +607,13 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     partials[currentPartialsIndex[nodeIndex]][nodeIndex]);
             // for constant
             if (nodeIndex >= nrOfLeafNodes) {
-                constScaledBefore = recoverUnchangedForPattern(patternIndex, changedMatrices,
+                constScaledBefore = recoverUnchangedForPattern(
+                        patternIndex,
+                        changedMatrices,
                         constScalingFactors[currentPartialsIndex[nodeIndex]][nodeIndex - nrOfLeafNodes][patternIndex],
                         constScalingFactorMap[currentPartialsIndex[nodeIndex]][nodeIndex - nrOfLeafNodes],
-                        constPartials[currentPartialsIndex[nodeIndex]][nodeIndex - nrOfLeafNodes]);
+                        constPartials[currentPartialsIndex[nodeIndex]][nodeIndex - nrOfLeafNodes]
+                );
             }
 
             // get scale factor
@@ -996,11 +1005,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                             // leaf
 
                             if (cGenotypeIndex == constGenotype) {
-                                if (childPartialsIndex1[cIndex + cGenotypeIndex] <= 0.0) {
-                                    cst1 = matricesIndex1[mIndex] * Double.MIN_VALUE;
-                                } else {
-                                    cst1 = tmp1;
-                                }
+                                cst1 = tmp1;
                             }
                         } else {
                             // internal node
@@ -1018,11 +1023,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                                 // leaf
 
                                 if (cGenotypeIndex == constGenotype) {
-                                    if (childPartialsIndex2[cIndex + cGenotypeIndex] <= 0.0) {
-                                        cst2 = matricesIndex2[mIndex] * Double.MIN_VALUE;
-                                    } else {
-                                        cst2 = tmp2;
-                                    }
+                                    cst2 = tmp2;
                                 }
                             } else {
                                 // internal node
@@ -1038,10 +1039,10 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     }
 
                     if (has2ndChild) {
-                        parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                        parentConstPartialsIndex[pIndex] = cst1 * cst2 > 0.0 ? cst1 * cst2 : Double.MIN_VALUE;
                         parentPartialsIndex[pIndex] = sum1 * sum2;
                     } else {
-                        parentConstPartialsIndex[pIndex] = cst1;
+                        parentConstPartialsIndex[pIndex] = cst1 > 0.0 ? cst1 : Double.MIN_VALUE;
                         parentPartialsIndex[pIndex] = sum1;
                     }
 
@@ -1224,11 +1225,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     if (childConstPartialsIndex1 == null) {
                         if (cGenotypeIndex == constGenotype) {
-                            if (childPartialsIndex1[cIndex + cGenotypeIndex] <= 0.0) {
-                                cst1 = matricesIndex1[mIndex] * Double.MIN_VALUE;
-                            } else {
-                                cst1 = tmp1;
-                            }
+                            cst1 = tmp1;
                         }
                     } else {
                         cst1 += matricesIndex1[mIndex] * childConstPartialsIndex1[cIndex + cGenotypeIndex];
@@ -1242,11 +1239,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         if (childConstPartialsIndex2 == null) {
                             if (cGenotypeIndex == constGenotype) {
-                                if (childPartialsIndex2[cIndex + cGenotypeIndex] <= 0.0) {
-                                    cst2 = matricesIndex2[mIndex] * Double.MIN_VALUE;
-                                } else {
-                                    cst2 = tmp2;
-                                }
+                                cst2 = tmp2;
                             }
                         } else {
                             cst2 += matricesIndex2[mIndex] * childConstPartialsIndex2[cIndex + cGenotypeIndex];
@@ -1260,10 +1253,10 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                 }
 
                 if (has2ndChild) {
-                    parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                    parentConstPartialsIndex[pIndex] = cst1 * cst2 > 0.0 ? cst1 * cst2 : Double.MIN_VALUE;
                     parentPartialsIndex[pIndex] = sum1 * sum2;
                 } else {
-                    parentConstPartialsIndex[pIndex] = cst1;
+                    parentConstPartialsIndex[pIndex] = cst1 > 0.0 ? cst1 : Double.MIN_VALUE;
                     parentPartialsIndex[pIndex] = sum1;
                 }
 
@@ -1434,7 +1427,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
-                        tmp1 = Math.log(matricesIndex1[mIndex]) + childPartialsIndex1[cIndex + cGenotypeIndex];
+                        tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + childPartialsIndex1[cIndex + cGenotypeIndex];
 
                         if (childConstPartialsIndex1 == null) {
                             // leaf
@@ -1444,14 +1437,14 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                         } else {
                             // internal node
 
-                            cstArr1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex]) + childConstPartialsIndex1[cIndex + cGenotypeIndex];
+                            cstArr1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + childConstPartialsIndex1[cIndex + cGenotypeIndex];
                         }
 
                         sp1[cGenotypeIndex] = tmp1;
 
                         if (has2ndChild) {
 
-                            tmp2 = Math.log(matricesIndex2[mIndex]) + childPartialsIndex2[cIndex + cGenotypeIndex];
+                            tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + childPartialsIndex2[cIndex + cGenotypeIndex];
 
                             if (childConstPartialsIndex2 == null) {
                                 // leaf
@@ -1461,7 +1454,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                             } else {
                                 // internal node
 
-                                cstArr2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + childConstPartialsIndex2[cIndex + cGenotypeIndex];
+                                cstArr2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + childConstPartialsIndex2[cIndex + cGenotypeIndex];
                             }
 
                             sp2[cGenotypeIndex] = tmp2;
@@ -1676,7 +1669,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                 for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
-                    tmp1 = Math.log(matricesIndex1[mIndex]) + childPartialsIndex1[cIndex + cGenotypeIndex];
+                    tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + childPartialsIndex1[cIndex + cGenotypeIndex];
 
                     if (childConstPartialsIndex1 == null) {
                         // leaf
@@ -1686,14 +1679,14 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     } else {
                         // internal node
 
-                        cstArr1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex]) + childConstPartialsIndex1[cIndex + cGenotypeIndex];
+                        cstArr1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + childConstPartialsIndex1[cIndex + cGenotypeIndex];
                     }
 
                     sp1[cGenotypeIndex] = tmp1;
 
                     if (has2ndChild) {
 
-                        tmp2 = Math.log(matricesIndex2[mIndex]) + childPartialsIndex2[cIndex + cGenotypeIndex];
+                        tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + childPartialsIndex2[cIndex + cGenotypeIndex];
 
                         if (childConstPartialsIndex2 == null) {
                             // leaf
@@ -1703,7 +1696,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                         } else {
                             // internal node
 
-                            cstArr2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + childConstPartialsIndex2[cIndex + cGenotypeIndex];
+                            cstArr2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + childConstPartialsIndex2[cIndex + cGenotypeIndex];
                         }
 
                         sp2[cGenotypeIndex] = tmp2;
@@ -1920,9 +1913,6 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
         // max-sum
         double max1, max2;
 
-        // constant site
-        double cst1, cst2;
-
         // intermediate values
         double tmp1, tmp2;
 
@@ -1960,19 +1950,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         // constant site
                         if (cGenotypeIndex == constGenotype) {
-                            if (leafPartialsIndex1[cIndex + cGenotypeIndex] <= 0.0) {
-                                cst1 = matricesIndex1[mIndex] * Double.MIN_VALUE;
-                            } else {
-                                cst1 = tmp1;
-                            }
-
-                            if (leafPartialsIndex2[cIndex + cGenotypeIndex] <= 0.0) {
-                                cst2 = matricesIndex2[mIndex] * Double.MIN_VALUE;
-                            } else {
-                                cst2 = tmp2;
-                            }
-
-                            parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                            parentConstPartialsIndex[pIndex] = tmp1 * tmp2 > 0.0 ? tmp1 * tmp2 : Double.MIN_VALUE;
                         }
 
                         // sum-product
@@ -2105,11 +2083,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                         // constant site
                         if (cGenotypeIndex == constGenotype) {
-                            if (leafPartialsIndex[cIndex + cGenotypeIndex] <= 0.0) {
-                                cst1 = matricesIndex1[mIndex] * Double.MIN_VALUE;
-                            } else {
-                                cst1 = tmp1;
-                            }
+                            cst1 = tmp1;
                         }
 
                         // sum-product
@@ -2157,7 +2131,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     }
 
                     // constant site
-                    parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                    parentConstPartialsIndex[pIndex] = cst1 * cst2 > 0.0 ? cst1 * cst2 : Double.MIN_VALUE;
 
                     // sum-product
                     parentPartialsIndex[pIndex] = sum1 * sum2;
@@ -2282,9 +2256,9 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                         }
 
                         // max-sum
-                        tmp1 = Math.log(matricesIndex1[mIndex]) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
+                        tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
                         if (has2ndChild) {
-                            tmp2 = Math.log(matricesIndex2[mIndex]) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
+                            tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
                         }
                         if (cGenotypeIndex == 0) {
                             max1 = tmp1;
@@ -2318,7 +2292,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     if (has2ndChild) {
                         // constant site
-                        parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                        parentConstPartialsIndex[pIndex] = cst1 * cst2 > 0.0 ? cst1 * cst2 : Double.MIN_VALUE;
 
                         // sum-product
                         parentPartialsIndex[pIndex] = sum1 * sum2;
@@ -2327,7 +2301,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                         parentMLPartialsIndex[pIndex] = max1 + max2;
                     } else {
                         // constant site
-                        parentConstPartialsIndex[pIndex] = cst1;
+                        parentConstPartialsIndex[pIndex] = cst1 > 0.0 ? cst1 : Double.MIN_VALUE;
 
                         // sum-product
                         parentPartialsIndex[pIndex] = sum1;
@@ -2532,9 +2506,6 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
         // max-sum
         double max1, max2;
 
-        // constant site
-        double cst1, cst2;
-
         // intermediate values
         double tmp1, tmp2;
 
@@ -2570,19 +2541,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     // constant site
                     if (cGenotypeIndex == constGenotype) {
-                        if (leafPartialsIndex1[cIndex + cGenotypeIndex] <= 0.0) {
-                            cst1 = matricesIndex1[mIndex] * Double.MIN_VALUE;
-                        } else {
-                            cst1 = tmp1;
-                        }
-
-                        if (leafPartialsIndex2[cIndex + cGenotypeIndex] <= 0.0) {
-                            cst2 = matricesIndex2[mIndex] * Double.MIN_VALUE;
-                        } else {
-                            cst2 = tmp2;
-                        }
-
-                        parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                        parentConstPartialsIndex[pIndex] = tmp1 * tmp2 > 0.0 ? tmp1 * tmp2 : Double.MIN_VALUE;
                     }
 
                     // sum-product
@@ -2710,11 +2669,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     // constant site
                     if (cGenotypeIndex == constGenotype) {
-                        if (leafPartialsIndex[cIndex + cGenotypeIndex] <= 0.0) {
-                            cst1 = matricesIndex1[mIndex] * Double.MIN_VALUE;
-                        } else {
-                            cst1 = tmp1;
-                        }
+                        cst1 = tmp1;
                     }
 
                     // sum-product
@@ -2762,7 +2717,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                 }
 
                 // constant site
-                parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                parentConstPartialsIndex[pIndex] = cst1 * cst2 > 0.0 ? cst1 * cst2 : Double.MIN_VALUE;
 
                 // sum-product
                 parentPartialsIndex[pIndex] = sum1 * sum2;
@@ -2884,9 +2839,9 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     }
 
                     // max-sum
-                    tmp1 = Math.log(matricesIndex1[mIndex]) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
+                    tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
                     if (has2ndChild) {
-                        tmp2 = Math.log(matricesIndex2[mIndex]) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
+                        tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
                     }
                     if (cGenotypeIndex == 0) {
                         max1 = tmp1;
@@ -2920,7 +2875,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                 if (has2ndChild) {
                     // constant site
-                    parentConstPartialsIndex[pIndex] = cst1 * cst2;
+                    parentConstPartialsIndex[pIndex] = cst1 * cst2 > 0.0 ? cst1 * cst2 : Double.MIN_VALUE;
 
                     // sum-product
                     parentPartialsIndex[pIndex] = sum1 * sum2;
@@ -2929,7 +2884,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     parentMLPartialsIndex[pIndex] = max1 + max2;
                 } else {
                     // constant site
-                    parentConstPartialsIndex[pIndex] = cst1;
+                    parentConstPartialsIndex[pIndex] = cst1 > 0.0 ? cst1 : Double.MIN_VALUE;
 
                     // sum-product
                     parentPartialsIndex[pIndex] = sum1;
@@ -3147,8 +3102,8 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                     for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
-                        tmp1 = Math.log(matricesIndex1[mIndex]) + leafPartialsIndex1[cIndex + cGenotypeIndex];
-                        tmp2 = Math.log(matricesIndex2[mIndex]) + leafPartialsIndex2[cIndex + cGenotypeIndex];
+                        tmp1 = Math.log(matricesIndex1[mIndex] > 0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + leafPartialsIndex1[cIndex + cGenotypeIndex];
+                        tmp2 = Math.log(matricesIndex2[mIndex] > 0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + leafPartialsIndex2[cIndex + cGenotypeIndex];
 
                         // constant site
                         if (cGenotypeIndex == constGenotype) {
@@ -3280,7 +3235,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
                         // for leaf node
-                        tmp1 = Math.log(matricesIndex1[mIndex]) + leafPartialsIndex[cIndex + cGenotypeIndex];
+                        tmp1 = Math.log(matricesIndex1[mIndex] > 0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + leafPartialsIndex[cIndex + cGenotypeIndex];
 
                         // constant site
                         if (cGenotypeIndex == constGenotype) {
@@ -3308,13 +3263,13 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                         // for internal node
 
                         // constant site
-                        cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalConstPartialsIndex[cIndex + cGenotypeIndex];
+                        cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalConstPartialsIndex[cIndex + cGenotypeIndex];
 
                         // sum-product
-                        sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalPartialsIndex[cIndex + cGenotypeIndex];
+                        sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalPartialsIndex[cIndex + cGenotypeIndex];
 
                         // max-sum
-                        tmp2 = Math.log(matricesIndex2[mIndex]) + internalMLPartialsIndex[cIndex + cGenotypeIndex];
+                        tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex[cIndex + cGenotypeIndex];
                         if (cGenotypeIndex == 0) {
                             max2 = tmp2;
                             parentMLGenotypes[pIndex][MLChild2Index].add(cGenotypeIndex);
@@ -3441,21 +3396,21 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
                         // constant site
-                        cst1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex]) + internalConstPartialsIndex1[cIndex + cGenotypeIndex];
+                        cst1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalConstPartialsIndex1[cIndex + cGenotypeIndex];
                         if (has2ndChild) {
-                            cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalConstPartialsIndex2[cIndex + cGenotypeIndex];
+                            cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalConstPartialsIndex2[cIndex + cGenotypeIndex];
                         }
 
                         // sum-product
-                        sp1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex]) + internalPartialsIndex1[cIndex + cGenotypeIndex];
+                        sp1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalPartialsIndex1[cIndex + cGenotypeIndex];
                         if (has2ndChild) {
-                            sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalPartialsIndex2[cIndex + cGenotypeIndex];
+                            sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalPartialsIndex2[cIndex + cGenotypeIndex];
                         }
 
                         // max-sum
-                        tmp1 = Math.log(matricesIndex1[mIndex]) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
+                        tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
                         if (has2ndChild) {
-                            tmp2 = Math.log(matricesIndex2[mIndex]) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
+                            tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
                         }
                         if (cGenotypeIndex == 0) {
                             max1 = tmp1;
@@ -3732,8 +3687,8 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
 
                 for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
-                    tmp1 = Math.log(matricesIndex1[mIndex]) + leafPartialsIndex1[cIndex + cGenotypeIndex];
-                    tmp2 = Math.log(matricesIndex2[mIndex]) + leafPartialsIndex2[cIndex + cGenotypeIndex];
+                    tmp1 = Math.log(matricesIndex1[mIndex] > 0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + leafPartialsIndex1[cIndex + cGenotypeIndex];
+                    tmp2 = Math.log(matricesIndex2[mIndex] > 0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + leafPartialsIndex2[cIndex + cGenotypeIndex];
 
                     // constant site
                     if (cGenotypeIndex == constGenotype) {
@@ -3860,7 +3815,7 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                 for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
                     // for leaf node
-                    tmp1 = Math.log(matricesIndex1[mIndex]) + leafPartialsIndex[cIndex + cGenotypeIndex];
+                    tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + leafPartialsIndex[cIndex + cGenotypeIndex];
 
                     // constant site
                     if (cGenotypeIndex == constGenotype) {
@@ -3888,13 +3843,13 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                     // for internal node
 
                     // constant site
-                    cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalConstPartialsIndex[cIndex + cGenotypeIndex];
+                    cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalConstPartialsIndex[cIndex + cGenotypeIndex];
 
                     // sum-product
-                    sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalPartialsIndex[cIndex + cGenotypeIndex];
+                    sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalPartialsIndex[cIndex + cGenotypeIndex];
 
                     // max-sum
-                    tmp2 = Math.log(matricesIndex2[mIndex]) + internalMLPartialsIndex[cIndex + cGenotypeIndex];
+                    tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex[cIndex + cGenotypeIndex];
                     if (cGenotypeIndex == 0) {
                         max2 = tmp2;
                         parentMLGenotypes[pIndex][MLChild2Index].add(cGenotypeIndex);
@@ -4018,21 +3973,21 @@ public class ScsBeerLikelihoodCore extends BeerLikelihoodCore {
                 for (int cGenotypeIndex = 0; cGenotypeIndex < nrOfStates; cGenotypeIndex++) {
 
                     // constant site
-                    cst1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex]) + internalConstPartialsIndex1[cIndex + cGenotypeIndex];
+                    cst1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalConstPartialsIndex1[cIndex + cGenotypeIndex];
                     if (has2ndChild) {
-                        cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalConstPartialsIndex2[cIndex + cGenotypeIndex];
+                        cst2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalConstPartialsIndex2[cIndex + cGenotypeIndex];
                     }
 
                     // sum-product
-                    sp1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex]) + internalPartialsIndex1[cIndex + cGenotypeIndex];
+                    sp1[cGenotypeIndex] = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalPartialsIndex1[cIndex + cGenotypeIndex];
                     if (has2ndChild) {
-                        sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex]) + internalPartialsIndex2[cIndex + cGenotypeIndex];
+                        sp2[cGenotypeIndex] = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalPartialsIndex2[cIndex + cGenotypeIndex];
                     }
 
                     // max-sum
-                    tmp1 = Math.log(matricesIndex1[mIndex]) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
+                    tmp1 = Math.log(matricesIndex1[mIndex] > 0.0 ? matricesIndex1[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex1[cIndex + cGenotypeIndex];
                     if (has2ndChild) {
-                        tmp2 = Math.log(matricesIndex2[mIndex]) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
+                        tmp2 = Math.log(matricesIndex2[mIndex] > 0.0 ? matricesIndex2[mIndex] : Double.MIN_VALUE) + internalMLPartialsIndex2[cIndex + cGenotypeIndex];
                     }
                     if (cGenotypeIndex == 0) {
                         max1 = tmp1;
