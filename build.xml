@@ -26,8 +26,10 @@ This configuration document was modified based on the BEAST package setup bluepr
     <!-- BEAST branch and version to build against
          (only different for version tags because of
          a Github peculiarity) -->
-    <property name="beast-branch" value="master"/>
-    <property name="beast-version" value="master"/>
+    <!-- property name="beast-branch" value="master"/ -->
+    <!-- property name="beast-version" value="master"/ -->
+    <property name="beast-branch" value="v2.6.7"/>
+    <property name="beast-version" value="2.6.7"/>
 
     <!-- Names of temporary build/test directories -->
     <property name="build" location="build"/>
@@ -95,7 +97,8 @@ This configuration document was modified based on the BEAST package setup bluepr
             <fileset dir="${build-beast}/beast2-${beast-version}/lib" includes="**/*.jar"/>
         </path>
 
-        <get src="https://github.com/CompEvol/beast2/archive/${beast-branch}.zip" dest="${build-beast}/beast.zip"/>
+        <!--get src="https://github.com/CompEvol/beast2/archive/${beast-branch}.zip" dest="${build-beast}/beast.zip"/-->
+        <get src="https://codeload.github.com/CompEvol/beast2/zip/refs/tags/${beast-branch}" dest="${build-beast}/beast.zip"/>
         <unzip src="${build-beast}/beast.zip" dest="${build-beast}"/>
         <mkdir dir="${build-beast}/beast2-${beast-version}/build"/>
 
