@@ -2,9 +2,9 @@
 
 SIEVE is a statistical method that exploits raw read counts for all nucleotides from scDNA-seq to reconstruct the cell phylogeny and call variants based on the inferred phylogenetic relations among cells. SIEVE is built upon finite-sites assumption, and is able to infer accurate branch lengths by correcting acquisition bias. When data is of adequate quality, SIEVE can also reliably call allelic dropout states. The software is implemented and available as a package of [BEAST 2](https://www.beast2.org/).
 
-For more details, check out the paper on bioRxiv:
+For more details, check out our paper in Genome Biology:
 
-[SIEVE: joint inference of single-nucleotide variants and cell phylogeny from single-cell DNA sequencing data](https://doi.org/10.1101/2022.03.24.485657)
+[SIEVE: joint inference of single-nucleotide variants and cell phylogeny from single-cell DNA sequencing data](https://doi.org/10.1186/s13059-022-02813-9)
 
 ## Installation
 
