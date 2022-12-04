@@ -37,9 +37,41 @@ SIEVE requires the following input files:
 
 ## RUN SIEVE
 
-### Use [Snakemake](https://snakemake.readthedocs.io/en/stable/) (Recommended)
+Before running SIEVE, please set up the `CONFIGURATION` section in `Snakefile`.
 
-We recommend using a two-stage strategy when accurate branch lengths of the cell phylogeny are of the concern. To is end, we have provided a stack of snakemake rules (`examples/Snakefile`) to execute this strategy automatically. A graphical illustration of the procedure can be found in `examples/dag.pdf`. 
+### Use Snakemake wiithin Docker (1st-recommended)
+
+#### Get the docker image
+
+It is highly recommended to use the docker image we have built to run SIEVE according to `Dockerfile`:
+
+```bash
+docker pull senbaikang/sieve:0.1
+```
+
+Note that we predefined the environment variable `_JAVA_OPTIONS` with `-Xmx10g`. Users can adjust this amount of memory (10g) according to their needs and then rebuild the image under `examples` folder of this repository:
+
+```bash
+docker build -t sieve:0.1 .
+```
+
+#### Run a container of the docker image
+
+The docker image only contains executables of BEAST 2. To run the pipeline, users need to mount the local `examples` folder containing the snakemake rules and supporting scripts to the docker container under `/root/data`:
+
+```bash
+docker run -n sieve -v /local/path/to/examples:/root/data senbaikang/sieve:0.1
+```
+
+The console output of snakemake will appear in the terminal. To run the pipeline in the background, add `-d` to the command above before the image name, and access the console outputs through:
+  
+```bash
+$ docker logs sieve
+```
+
+### Use [Snakemake](https://snakemake.readthedocs.io/en/stable/) (2nd-recommended)
+
+We also recommend using a two-stage strategy when accurate branch lengths of the cell phylogeny are of the concern. To is end, we have provided a stack of snakemake rules (`examples/Snakefile`) to execute this strategy automatically. A graphical illustration of the procedure can be found in `examples/dag.pdf`. 
 
 With snakemake installed and everything set up in `examples/Snakefile`, a dry-run can be made immediately under `examples/` by typing:
 

@@ -1,0 +1,8 @@
+name: sieve
+channels:
+  - conda-forge
+  - defaults
+  - bioconda
+dependencies:
+  - python=3.11.0
+  - snakemake=7.18.2
