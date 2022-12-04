@@ -12,13 +12,13 @@ import os
 
 # Directory for the results of the analysis. Can be absolute or relative.
 # Set to '' to save the results in the current directory.
-BASEDIR = ''
+BASEDIR = 'results/'
 
 # Path to the data file.
-DATA = 'data/readCounts.tsv'
+DATA = 'data/read_counts.tsv'
 
 # Path to the file containing cell names.
-CELLNAMES = 'data/snv_cell_names'
+CELLNAMES = 'data/cell_names'
 
 # Path to the file containing cell names to be excluded.
 EXCLUDEDCELLNAMES = ''
@@ -53,10 +53,10 @@ BURNIN = 10
 EATIMATESTYPE = 'all'
 
 # Path to the 'applauncher' executable of BEAST 2.
-APPLAUNCHER = '/path/to/applauncher'
+APPLAUNCHER = 'applauncher'
 
 # Path to the 'beast' executable of BEAST 2.
-BEAST = '/path/to/beast'
+BEAST = 'beast'
 
 # Directory containing the configuration templates. Can be absolute or relative.
 TEMPLATESDIR = 'templates/'
