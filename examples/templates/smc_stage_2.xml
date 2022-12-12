@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <beast beautistatus="" beautitemplate="Standard" namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.rawreadcountsmodel:beast.evolution.rawreadcountsmodel.seqcovmodel:beast.evolution.rawreadcountsmodel.nucreadcountsmodel:beast.evolution.likelihood" required="2.6" version="2.6">
-    <data ascertained="felsenstein" meanAscBiasCorrection = "mean" bgInfoSanityCheck="true" bgSitesNum="-1" dataType="full supports-coverage" id="alignment" spec="beast.evolution.alignment.ScsAlignment">
+    <data ascertained="felsenstein" meanAscBiasCorrection = "mean" dataType="full supports-coverage" id="alignment" spec="beast.evolution.alignment.ScsAlignment">
     </data>
                     
     <map name="Uniform">beast.math.distributions.Uniform</map>
