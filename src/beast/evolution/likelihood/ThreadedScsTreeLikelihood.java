@@ -191,7 +191,8 @@ public class ThreadedScsTreeLikelihood extends ScsGenericTreeLikelihood {
                         "dataType", scsDataInput.get().dataTypeInput.get(),
                         "ascertained", scsDataInput.get().ascBiasCorrectionInput.get(),
                         "meanAscBiasCorrection", scsDataInput.get().meanAscBiasCorrectionInput.get(),
-                        "nrOfBackgroundSites", scsDataInput.get().getNrOfBackgroundSites()
+                        "nrOfBackgroundSites", scsDataInput.get().getNrOfBackgroundSites(),
+                        "manipulatedNrOfBackgroundSites", scsDataInput.get().getManipulatedNrOfBackgroundSites()
                 );
 
                 treeLikelihood[i].initByName(

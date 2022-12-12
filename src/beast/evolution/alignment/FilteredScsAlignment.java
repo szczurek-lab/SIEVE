@@ -27,6 +27,9 @@ public class FilteredScsAlignment extends ScsAlignment {
 
     final public Input<Long> nrOfBackgroundSitesInput = new Input<>("nrOfBackgroundSites", "number of background sites", Input.Validate.REQUIRED);
 
+    final public Input<Long> manipulatedNrOfBackgroundSitesInput = new Input<>("manipulatedNrOfBackgroundSites", "manipulated number of background sites", Input.Validate.REQUIRED);
+
+
     // these triples specify a range for(i=From; i <= To; i += Step) for patterns
     int[] from;
     int[] to;
@@ -57,6 +60,7 @@ public class FilteredScsAlignment extends ScsAlignment {
         m_dataType = data.m_dataType;
         taxaNames = data.taxaNames;
         nrOfBackgroundSites = nrOfBackgroundSitesInput.get();
+        manipulatedNrOfBackgroundSites = manipulatedNrOfBackgroundSitesInput.get();
         lociExistence = data.lociExistence;
         sequences = data.sequences;
 

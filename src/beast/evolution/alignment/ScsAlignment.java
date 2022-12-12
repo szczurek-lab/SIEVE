@@ -46,7 +46,7 @@ public class ScsAlignment extends Map<String> {
      */
     protected enum ascBiasCorrection {none, lewis, felsenstein}
 
-    protected enum meanAscBiasCorrection {mean, geometric};
+    protected enum meanAscBiasCorrection {mean, geometric}
 
     /**
      * list of data type descriptions, obtained from DataType classes
@@ -107,13 +107,10 @@ public class ScsAlignment extends Map<String> {
             meanAscBiasCorrection.values()
     );
 
-    final public Input<Boolean> bgInfoSanityCheckInput = new Input<>("bgInfoSanityCheck",
-            "perform background sanity check and compute the number of background sites; default is true, " +
-                    "but can be set to false only if you know what you are doing.", true);
-
-    final public Input<Long> nrOfBackGroundSitesInput = new Input<>("bgSitesNum",
-            "the number of background sites. This works only with 'bgInfoSanityCheck' being false; otherwise, " +
-                    "the number of background sites will be extracted from the provided background information");
+    final public Input<Long> manipulatedNrOfBackgroundSitesInput = new Input<>("manipulatedBgSitesNum",
+            "the manipulated number of background sites only for acquisition bias correction, not for " +
+                    "background likelihood. This number should be set only when the number of background sites is " +
+                    "not enough for acquisition bias correction.");
 
 
     /**
@@ -132,11 +129,6 @@ public class ScsAlignment extends Map<String> {
     protected List<String> taxaNames = new ArrayList<>();
 
     /**
-     * a flag to show whether the background information is provided or not
-     */
-    protected boolean backgroundExistence = false;
-
-    /**
      * store background information names if backgroundExistence == true
      */
     protected List<String> backgroundNames = null;
@@ -152,6 +144,12 @@ public class ScsAlignment extends Map<String> {
      * number of background sites
      */
     protected long nrOfBackgroundSites;
+
+    /**
+     * the manipulated number of background sites
+     */
+    protected long manipulatedNrOfBackgroundSites;
+
     protected List<Long> nrOfBackgroundPoints;
 
     /**
@@ -250,7 +248,7 @@ public class ScsAlignment extends Map<String> {
         this.sequences = scsSequenceInput.get();
 
         // initialize the alignment from the given list of sequences
-        initializeWithSequenceList(sequences, true);
+        initializeWithSequenceList(sequences);
 
         // initialize background information
         initializeBackgroundInfo();
@@ -258,7 +256,6 @@ public class ScsAlignment extends Map<String> {
         Log.info.println(toString(false));
     } // initAndValidate
 
-    @SuppressWarnings("deprecation")
     protected void initDataType() {
         if (!types.contains(dataTypeInput.get())) {
             throw new IllegalArgumentException("Data type + '" + dataTypeInput.get() + "' cannot be found. " +
@@ -280,7 +277,7 @@ public class ScsAlignment extends Map<String> {
         }
     } // initDataType
 
-    private void initializeWithSequenceList(List<ScsSequence> sequences, boolean log) {
+    private void initializeWithSequenceList(List<ScsSequence> sequences) {
         taxaNames.clear();
         parsedSequences.clear();
 
@@ -319,9 +316,10 @@ public class ScsAlignment extends Map<String> {
     } // initializeWithSequenceList
 
     private void initializeBackgroundInfo() {
-        if (scsBackgroundInfoInput.get() != null && scsBackgroundInfoInput.get().size() > 0) {
-            backgroundExistence = true;
+        nrOfBackgroundSites = 0;
+        manipulatedNrOfBackgroundSites = 0;
 
+        if (scsBackgroundInfoInput.get() != null && scsBackgroundInfoInput.get().size() > 0) {
             java.util.Map<String, List<long[]>> bgName2Info = new HashMap<>();
             nrOfBackgroundPoints = new ArrayList<>();
 
@@ -341,30 +339,29 @@ public class ScsAlignment extends Map<String> {
             }
 
             // sanity check
-            if (bgInfoSanityCheckInput.get()) {
-                sanityCheckBackgroundInfo();
-                nrOfBackgroundSites = nrOfBackgroundPoints.get(0) / getTaxonCount();
-            } else {
-                if (nrOfBackGroundSitesInput.get() != null) {
-                    nrOfBackgroundSites = nrOfBackGroundSitesInput.get();
+            sanityCheckBackgroundInfo();
 
-                    if (nrOfBackgroundSites <= 0)
-                        throw new IllegalArgumentException("Error! The number of background sites must be a positive " +
-                                "number, while " + nrOfBackgroundSites + " is provided.");
-                } else {
-                    if (ascBiasCorrectionInput.get() == ascBiasCorrection.felsenstein)
-                        throw new IllegalArgumentException("Error! 'bgSitesNum' must be specified when no sanity check " +
-                                "of background information ('bgInfoSanityCheck' being false) and using Felsenstein's " +
-                                "bias correction.");
-
-                    nrOfBackgroundSites = 0;
-                }
-            }
+            nrOfBackgroundSites = nrOfBackgroundPoints.get(0) / getTaxonCount();
+            manipulatedNrOfBackgroundSites = nrOfBackgroundSites;
 
             // sort background names in the order we prefer
             sortBackgroundInfo(bgName2Info);
-        } else
-            nrOfBackgroundSites = (nrOfBackGroundSitesInput.get() == null || nrOfBackGroundSitesInput.get() <= 0) ? 0 : nrOfBackGroundSitesInput.get();
+        }
+
+        // if the manipulated number of background sites is manually set
+        if (manipulatedNrOfBackgroundSitesInput.get() != null) {
+            if (ascBiasCorrectionInput.get() != ascBiasCorrection.felsenstein)
+                throw new IllegalArgumentException("Error! 'manipulatedNrOfBackgroundSitesInput' must only be " +
+                        "specified when using Felsenstein's bias correction.");
+
+            manipulatedNrOfBackgroundSites = manipulatedNrOfBackgroundSitesInput.get();
+
+            if (manipulatedNrOfBackgroundSites <= nrOfBackgroundSites)
+                throw new IllegalArgumentException("Error! The manipulated number of background sites (" +
+                        manipulatedNrOfBackgroundSites + ") must be no smaller than the number of background sites (" +
+                        + nrOfBackgroundSites + ") inferred from the data; otherwise it makes no sense in the " +
+                        "acquisition bias correction. Please use a larger number or remove the definition.");
+        }
     } // initializeBackgroundInfo
 
     private void sanityCheckBackgroundInfo() {
@@ -681,15 +678,6 @@ public class ScsAlignment extends Map<String> {
         return patternWeight;
     } // getWeights
 
-    /**
-     * get the situation of background information (existing or not)
-     *
-     * @return background information existence
-     */
-    public boolean isBackgroundExistence() {
-        return backgroundExistence;
-    }
-
     public List<String> getBackgroundNames() {
         return backgroundNames;
     }
@@ -700,6 +688,10 @@ public class ScsAlignment extends Map<String> {
 
     public long getNrOfBackgroundSites() {
         return nrOfBackgroundSites;
+    }
+
+    public long getManipulatedNrOfBackgroundSites() {
+        return manipulatedNrOfBackgroundSites;
     }
 
     public boolean isAscBiasCorrection() {
@@ -776,11 +768,11 @@ public class ScsAlignment extends Map<String> {
         switch (meanAscBiasCorrectionInput.get()) {
             case mean:
                 corr = MathFunctions.logSumExp(logConstRoot);
-                corrected = (corr - Math.log(logConstRoot.length)) * getNrOfBackgroundSites();
+                corrected = (corr - Math.log(logConstRoot.length)) * getManipulatedNrOfBackgroundSites();
                 break;
             case geometric:
                 corr = MathFunctions.sum(logConstRoot);
-                corrected = corr * getNrOfBackgroundSites() / logConstRoot.length;
+                corrected = corr * getManipulatedNrOfBackgroundSites() / logConstRoot.length;
                 break;
             default:
                 throw new IllegalArgumentException("Error! Illegal value for meanAscBiasCorrection.");
@@ -819,9 +811,9 @@ public class ScsAlignment extends Map<String> {
     protected double getAscBiasCorrectionFelsenstein(final double[] logConstRoot) {
         switch (meanAscBiasCorrectionInput.get()) {
             case mean:
-                return (MathFunctions.logSumExp(logConstRoot) - Math.log(lociNr)) * getNrOfBackgroundSites();
+                return (MathFunctions.logSumExp(logConstRoot) - Math.log(lociNr)) * getManipulatedNrOfBackgroundSites();
             case geometric:
-                return MathFunctions.sum(logConstRoot) * getNrOfBackgroundSites() / logConstRoot.length;
+                return MathFunctions.sum(logConstRoot) * getManipulatedNrOfBackgroundSites() / logConstRoot.length;
             default:
                 throw new IllegalArgumentException("Error! Illegal value for meanAscBiasCorrection.");
         }

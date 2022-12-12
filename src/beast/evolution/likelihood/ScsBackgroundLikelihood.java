@@ -40,6 +40,7 @@ public class ScsBackgroundLikelihood extends Distribution {
     protected double[] wildTypeNucReadCountsModelParams;
 
     protected int nrOfTaxa;
+
     protected long nrOfBackgroundSites;
 
     protected List<List<long[]>> backgroundInfo;
