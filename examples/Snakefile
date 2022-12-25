@@ -15,10 +15,10 @@ import os
 BASEDIR = 'results/'
 
 # Path to the data file.
-DATA = 'data/read_counts.tsv'
+DATA = 'data/10_cells/read_counts.tsv'
 
 # Path to the file containing cell names.
-CELLNAMES = 'data/cell_names'
+CELLNAMES = 'data/10_cells/cell_names'
 
 # Path to the file containing cell names to be excluded.
 EXCLUDEDCELLNAMES = ''
