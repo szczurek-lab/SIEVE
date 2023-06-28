@@ -11,6 +11,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV _JAVA_OPTIONS -Xmx10g
 
 ARG JAVA_VERSION=8
+ARG DLIB_VERSION=v19.24.2
 ARG BEAST_2_VERSION_MAJOR=2.6
 ARG BEAST_2_VERSION_MINOR=7
 ARG SIEVE_VERSION=v0.15.6
@@ -33,6 +34,7 @@ RUN apt-get update && \
     curl \
     vim \
     htop \
+    cmake \
     unzip \
     ca-certificates \
     apt-transport-https \
@@ -40,6 +42,7 @@ RUN apt-get update && \
     autotools-dev \
     libicu-dev \
     libbz2-dev \
+    libboost-all-dev \
     libomp-dev \
     gsfonts \
     gnupg2 && \
@@ -69,6 +72,26 @@ RUN micromamba create -y -f environment.yml && \
     rm -f environment.yml
 
 WORKDIR /root/pkgs
+
+# Install DLIB
+RUN git clone --depth 1 --branch ${DLIB_VERSION} https://github.com/davisking/dlib.git && \
+    cd dlib && \
+    mkdir build && \
+    cd build && \
+    cmake -D CMAKE_BUILD_TYPE=Release .. && \
+    cmake --build . && \
+    make install
+
+# Install DataFilter
+RUN git clone --depth 1 https://github.com/szczurek-lab/DataFilter.git && \
+    cd DataFilter && \
+    mkdir build && \
+    cd build && \
+    cmake -D CMAKE_C_COMPILER=/usr/bin/gcc -D CMAKE_CXX_COMPILER=/usr/bin/g++ -D CMAKE_BUILD_TYPE=Release -D USE_CONAN=OFF .. && \
+    cmake --build . && \
+    ln bin/datafilter /usr/local/bin/datafilter && \
+    cd ../.. && \
+    rm -rf DataFilter
 
 # Install BEAST 2 and SIEVE
 RUN wget -O BEAST.v${BEAST_2_VERSION_MAJOR}.${BEAST_2_VERSION_MINOR}.Linux.tgz https://github.com/CompEvol/beast2/releases/download/v${BEAST_2_VERSION_MAJOR}.${BEAST_2_VERSION_MINOR}/BEAST.v${BEAST_2_VERSION_MAJOR}.${BEAST_2_VERSION_MINOR}.Linux.tgz && \
