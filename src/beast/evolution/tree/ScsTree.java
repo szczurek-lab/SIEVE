@@ -364,8 +364,6 @@ public class ScsTree extends Tree {
         }
         if (otherNodes[rootNr].getRight() != null) {
             root.setRight(m_nodes[otherNodes[rootNr].getRight().getNr()]);
-        } else {
-            root.setRight(null);
         }
         assignFrom(rootNr + 1, nodeCount, otherNodes);
     }
