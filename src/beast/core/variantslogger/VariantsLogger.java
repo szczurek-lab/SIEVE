@@ -30,8 +30,9 @@ public class VariantsLogger extends BEASTObject {
                     "matrix (*.ternary) and probabilities (*.probs), with cell names (*.cell_names) and loci " +
                     "information (*.loci_info) in separate files (default false). An annotated intermediate tree " +
                     "(*.intermediate_tree) with maximum likelihood genotypes of all nodes labeled will also be " +
-                    "saved for gene annotation purpose in the following step. Besides, allelic sequencing " +
-                    "coverage and raw variance for each cell (*.allelic_info) will also be saved.",
+                    "saved for gene annotation purpose in the following step. Besides, for each cell, size factor " +
+                    "(*.size_factors) as well as allelic sequencing coverage and raw variance (*.allelic_info) " +
+                    "will also be saved.",
             Input.Validate.OPTIONAL
     );
 
@@ -49,6 +50,8 @@ public class VariantsLogger extends BEASTObject {
     private String probsFileName = null;
     private String treeFileName = null;
     private String allelicInfoFileName = null;
+    private String sizeFactorFileName = null;
+
 
     private VariantsLoggable logger;
 
@@ -63,6 +66,8 @@ public class VariantsLogger extends BEASTObject {
     protected PrintStream probsOut;
     protected PrintStream treeOut;
     protected PrintStream allelicInfoOut;
+    protected PrintStream sizeFactorOut;
+
 
 
     //**********************************************
@@ -101,6 +106,8 @@ public class VariantsLogger extends BEASTObject {
             this.probsFileName = prefix + ".probs";
             this.treeFileName = prefix + ".intermediate_tree";
             this.allelicInfoFileName = prefix + ".allelic_info";
+            this.sizeFactorFileName = prefix + ".size_factors";
+
         }
 
     } // initAndValidate
@@ -171,6 +178,13 @@ public class VariantsLogger extends BEASTObject {
             if (allelicInfoFile.exists())
                 Log.err.println("Overwriting " + this.allelicInfoFileName + "...");
             this.allelicInfoOut = new PrintStream(this.allelicInfoFileName);
+
+            if (System.getProperty("variant.calling.file.prefix") != null)
+                this.sizeFactorFileName = System.getProperty("variant.calling.file.prefix") + this.sizeFactorFileName;
+            final File sizeFactorFile = new File(this.sizeFactorFileName);
+            if (sizeFactorFile.exists())
+                Log.err.println("Overwriting " + this.sizeFactorFileName + "...");
+            this.sizeFactorOut = new PrintStream(this.sizeFactorFileName);
         }
     } // openFiles
 
@@ -188,7 +202,8 @@ public class VariantsLogger extends BEASTObject {
                 this.cellNamesOut,
                 this.probsOut,
                 this.treeOut,
-                this.allelicInfoOut
+                this.allelicInfoOut,
+                this.sizeFactorOut
         );
 
     } // init
@@ -223,6 +238,9 @@ public class VariantsLogger extends BEASTObject {
 
         if (this.allelicInfoOut != null)
             this.allelicInfoOut.close();
+
+        if (this.sizeFactorOut != null)
+            this.sizeFactorOut.close();
     } // close
 
 }

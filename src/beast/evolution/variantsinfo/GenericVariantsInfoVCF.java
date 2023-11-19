@@ -134,7 +134,7 @@ public abstract class GenericVariantsInfoVCF extends GenericVariantsInfo.Base im
         vcfOut.println("##FORMAT=<ID=GQ,Number=1,Type=Integer,Description=\"Genotype quality\">");
         vcfOut.println("##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">");
         vcfOut.println("##FORMAT=<ID=PL,Number=G,Type=Integer,Description=\"Normalized, phred-scaled likelihoods for genotypes as defined in the VCF specification; in the following order: " + substModel.getAllGenotypes(",") + "\">");
-        vcfOut.println("##FORMAT=<ID=ADO,Number=1,Type=Integer,Description=\"Allelic dropout (ADO) state. Possible values are 0 (no ADO), 1 (one ADO), and 2 (two ADOs). For single ADO mode, only 0 and 1 are allowed. For locus dropout, 0, 1, and 2 are allowed.\">");
+        vcfOut.println("##FORMAT=<ID=ADO,Number=1,Type=Integer,Description=\"Allelic dropout (ADO) state corresponding to the number of ADOs.\">");
         vcfOut.println("##FORMAT=<ID=ADOQ,Number=1,Type=Integer,Description=\"Allelic dropout quality\">");
         vcfOut.println("##FORMAT=<ID=ADOP,Number=D,Type=Integer,Description=\"Normalized, phred-scaled likelihoods for each possible ADO state\">");
         vcfOut.println(VCFEntry.getCombinedHeader());
@@ -159,9 +159,9 @@ public abstract class GenericVariantsInfoVCF extends GenericVariantsInfo.Base im
 
         if (allelicInfoOut != null) {
             if (logSiteWiseAllelicInfo)
-                allelicInfoOut.println("#for a specific site in each line where information for each cell are tab-separated: allelic sequencing coverage of a cell,allelic sequencing coverage raw variance of a cell");
+                allelicInfoOut.println("#for a specific site in each line where information for each cell is tab-separated: allelic sequencing coverage of a cell,allelic sequencing coverage raw variance of a cell");
             else
-                allelicInfoOut.println("#for a specific cell in each line where information for tab-separated: allelic sequencing coverage\tallelic sequencing coverage raw variance");
+                allelicInfoOut.println("#for a specific cell in each line where information is tab-separated: allelic sequencing coverage\tallelic sequencing coverage raw variance");
         }
     } // initHeader
 

@@ -337,6 +337,7 @@ public abstract class ScsSubstitutionModelBase extends GeneralSubstitutionModel 
             case '0':
                 return '0';
             case '-':
+            case '.':
                 return missingAllele;
             case '1':
                 return (cellAltNucs == null || cellAltNucs.length == 0) ?
@@ -344,7 +345,7 @@ public abstract class ScsSubstitutionModelBase extends GeneralSubstitutionModel 
                         adaptAltAllele(locusAltNucs, cellAltNucs[0], existingAltNucs);
             default:
                 throw new IllegalArgumentException("Error! Unsupported character: " + allele +
-                        ". Only '0', '1', and '-' are allowed.");
+                        ". Only '0', '1', '2', '-', and '.' are allowed.");
         }
     } // adaptAllele
 

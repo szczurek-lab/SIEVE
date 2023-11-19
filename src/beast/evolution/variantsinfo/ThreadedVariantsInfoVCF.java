@@ -236,6 +236,7 @@ public class ThreadedVariantsInfoVCF extends GenericVariantsInfoVCF {
      * @param probsOut       posterior probability log stream
      * @param treeOut        annotated tree log stream
      * @param allelicInfoOut allelic information log stream
+     * @param sizeFactorOut  size factor log stream
      */
     @Override
     public void init(
@@ -243,7 +244,8 @@ public class ThreadedVariantsInfoVCF extends GenericVariantsInfoVCF {
             PrintStream cellNamesOut,
             PrintStream probsOut,
             PrintStream treeOut,
-            PrintStream allelicInfoOut
+            PrintStream allelicInfoOut,
+            PrintStream sizeFactorOut
     ) {
         initHeader(vcfOut, cellNamesOut, probsOut, treeOut, allelicInfoOut);
 
@@ -255,6 +257,9 @@ public class ThreadedVariantsInfoVCF extends GenericVariantsInfoVCF {
                 start += scsDataInput.get().getLociNr();
             }
         }
+
+        if (sizeFactorOut != null)
+            this.variantsInfoVCFs[0].logSizeFactors(sizeFactorOut);
     } // init
 
     /**
