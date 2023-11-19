@@ -155,13 +155,20 @@ public class CellLocusGenotype {
         return this.ternary;
     } // getTernary
 
-    public String getGenotypeLikelihoodsAsString(String separator, String floatFormat) {
+    public String getGenotypeLikelihoodsAsString(String separator, String floatFormat, boolean normalize) {
+        double[] ret = Arrays.stream(this.genotypeLogLikelihoods).map(Math::exp).toArray();
+
+        if (normalize) {
+            final double tmp = Arrays.stream(ret).sum();
+            ret = Arrays.stream(ret).map(x -> x/tmp).toArray();
+        }
+
         StringBuilder sb = new StringBuilder();
 
-        for (int i = 0; i < this.genotypeLogLikelihoods.length; i++) {
-            sb.append(String.format(floatFormat, Math.exp(this.genotypeLogLikelihoods[i])));
+        for (int i = 0; i < ret.length; i++) {
+            sb.append(String.format(floatFormat, ret[i]));
 
-            if (i < this.genotypeLogLikelihoods.length - 1)
+            if (i < ret.length - 1)
                 sb.append(separator);
         }
 

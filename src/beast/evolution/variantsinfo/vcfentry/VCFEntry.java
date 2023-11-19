@@ -126,7 +126,7 @@ public class VCFEntry {
         StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < this.cellLocusGenotype.length; i++) {
-            sb.append(this.cellLocusGenotype[i].getGenotypeLikelihoodsAsString(itemSeparator, FLOAT_FORMAT));
+            sb.append(this.cellLocusGenotype[i].getGenotypeLikelihoodsAsString(itemSeparator, FLOAT_FORMAT, true));
 
             if (i < this.cellLocusGenotype.length - 1)
                 sb.append(classSeparator);

@@ -12,13 +12,15 @@ public interface VariantsLoggable {
      * @param probsOut       posterior probability log stream
      * @param treeOut        annotated tree log stream
      * @param allelicInfoOut allelic information log stream
+     * @param sizeFactorOut  size factor log stream
      */
     void init(
             PrintStream vcfOut,
             PrintStream cellNamesOut,
             PrintStream probsOut,
             PrintStream treeOut,
-            PrintStream allelicInfoOut
+            PrintStream allelicInfoOut,
+            PrintStream sizeFactorOut
     );
 
     /**

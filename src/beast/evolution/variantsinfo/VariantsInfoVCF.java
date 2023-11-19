@@ -511,6 +511,7 @@ public class VariantsInfoVCF extends GenericVariantsInfoVCF {
      * @param probsOut       posterior probability log stream
      * @param treeOut        annotated tree log stream
      * @param allelicInfoOut allelic information log stream
+     * @param sizeFactorOut  size factor log stream
      */
     @Override
     public void init(
@@ -518,12 +519,16 @@ public class VariantsInfoVCF extends GenericVariantsInfoVCF {
             PrintStream cellNamesOut,
             PrintStream probsOut,
             PrintStream treeOut,
-            PrintStream allelicInfoOut
+            PrintStream allelicInfoOut,
+            PrintStream sizeFactorOut
     ) {
         initHeader(vcfOut, cellNamesOut, probsOut, treeOut, allelicInfoOut);
 
         if (allelicInfoOut != null)
             logAllelicInfoHelper(allelicInfoOut, 0);
+
+        if (sizeFactorOut != null)
+            logSizeFactors(sizeFactorOut);
     } // init
 
     /**
@@ -572,6 +577,24 @@ public class VariantsInfoVCF extends GenericVariantsInfoVCF {
             }
         }
     } // logAllelicInfoHelper
+
+    /**
+     * Helper function to log size factors.
+     *
+     * @param sizeFactorOut size factor log stream
+     */
+    public void logSizeFactors(@NotNull PrintStream sizeFactorOut) {
+        int[] cellNameIndicesInData = new int[numOfTips];
+        for (int i = 0; i < numOfTips; i++)
+            cellNameIndicesInData[i] = scsData.getTaxonIndex(sortedTipNames[i]);
+
+        for (int i = 0; i < numOfTips; i++) {
+            sizeFactorOut.print(sizeFactors[cellNameIndicesInData[i]]);
+
+            if (i < numOfTips - 1)
+                sizeFactorOut.println();
+        }
+    } // sizeFactorOut
 
     /**
      * log each entry to PrintStream
