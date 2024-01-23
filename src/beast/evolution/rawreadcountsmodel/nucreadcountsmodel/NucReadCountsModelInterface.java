@@ -104,8 +104,8 @@ public interface NucReadCountsModelInterface {
                     (effSeqErrRateInput.get().isEstimated() &&
                             (effSeqErrRateInput.get().getLower() < 0.0 ||
                                     effSeqErrRateInput.get().getUpper() < 0.0 ||
-                                    effSeqErrRateInput.get().getUpper() > 1.0)))
-                throw new IllegalArgumentException("effSeqErrRate and its bounds should be defined as no smaller than 0.");
+                                    effSeqErrRateInput.get().getUpper() > 0.75)))
+                throw new IllegalArgumentException("effSeqErrRate should be within [0, 0.75].");
             else
                 effSeqErrRate = effSeqErrRateInput.get();
 
