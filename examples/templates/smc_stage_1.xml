@@ -29,7 +29,7 @@
             <!-- raw read counts model parameters -->
             <parameter id="allelicSeqCov" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="1000.0">50.0</parameter>
             <parameter id="allelicSeqCovRawVar" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="1000.0">50.0</parameter>
-            <parameter id="effSeqErrRate" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="1.0">8.0E-3</parameter>
+            <parameter id="effSeqErrRate" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="0.75">8.0E-3</parameter>
             <parameter id="shapeCtrl1" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="1.0E4">150.0</parameter>
             <parameter id="shapeCtrl2" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="100">2.0</parameter>
             <parameter id="adoRate" lower="0.0" name="stateNode" spec="parameter.RealParameter" upper="1.0">0.3</parameter>
