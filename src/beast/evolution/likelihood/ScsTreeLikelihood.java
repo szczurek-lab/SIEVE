@@ -425,16 +425,6 @@ public class ScsTreeLikelihood extends ScsGenericTreeLikelihood {
             throw new IllegalArgumentException("Error! 'rawReadCountsModelInput' should be of type 'RawReadCountsModelFiniteMuDM', rather than " +
                     "of the provided type " + rawReadCountsModel.getClass().getName() + ", because the 'substModel' in " +
                     "'siteModelInput' is of type 'ScsFiniteMuExtendedModel'. (" + this.getClass().getName() + ")");
-
-        if ((substitutionModel instanceof ScsFiniteMuDelModel) && (!(rawReadCountsModel instanceof RawReadCountsModelFiniteMuDelBB)))
-            throw new IllegalArgumentException("Error! 'rawReadCountsModelInput' should be of type 'ScsErrorModelFiniteMuDelBB', rather than " +
-                    "of the provided type " + rawReadCountsModel.getClass().getName() + ", because the 'substModel' in " +
-                    "'siteModelInput' is of type 'ScsFiniteMuDelModel'. (" + this.getClass().getName() + ")");
-
-        if ((substitutionModel instanceof ScsFiniteMuDelInsModel) && (!(rawReadCountsModel instanceof RawReadCountsModelFiniteMuDelInsBB)))
-            throw new IllegalArgumentException("Error! 'rawReadCountsModelInput' should be of type 'ScsErrorModelFiniteMuDelInsBB', rather than " +
-                    "of the provided type " + rawReadCountsModel.getClass().getName() + ", because the 'substModel' in " +
-                    "siteModelInput is of type 'ScsFiniteMuDelInsModel'. (" + this.getClass().getName() + ")");
     } // variablesSanityCheck
 
     protected void initCore() {

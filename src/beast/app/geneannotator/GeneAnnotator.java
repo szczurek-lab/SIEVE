@@ -170,10 +170,6 @@ public class GeneAnnotator {
                 return new ScsFiniteMuExtendedModel();
             case 1:
                 return new ScsFiniteMuModel();
-            case 2:
-                return new ScsFiniteMuDelModel();
-            case 3:
-                return new ScsFiniteMuDelInsModel();
             default:
                 throw new RuntimeException("Error! Invalid label for substitution model: " + substModelLabel);
         }
