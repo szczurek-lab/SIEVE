@@ -237,3 +237,12 @@ Usage: geneannotator [-help] [-tree <input_tree_file>] [-snv <snv_file>] [-subst
     On Windows, macOS, and Linux with GUI, check the solutions [here](https://www.beast2.org/increasing-memory-usage/). 
     If this error appears on Linux server without GUI, the easiest solution without root privilege is to simply run `export _JAVA_OPTIONS="-Xmx10g"`, `10g` can be increased as you need as long as it is within the server's capacity.
 
+
+## Funding
+
+This project received support from
+- the Polish National Science Centre SONATA BIS grant No. 2020/38/E/NZ2/00305,
+- European Union’s Horizon 2020 research and innovation programme under the Marie Skłodowska-Curie grant agreement No. 766030, as well as
+- European Research Council (ERC-617457-PHYLOCANCER), the Spanish Ministry of Science and Innovation (PID2019-106247GB-I00), and Xunta de Galicia.
+
+
